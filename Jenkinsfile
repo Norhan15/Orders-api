@@ -74,7 +74,7 @@ pipeline {
                             echo "DB_PASSWORD=${DB_PASSWORD}" >> $REMOTE_PATH/.env &&
                             echo "DB_DATABASE=${DB_DATABASE}" >> $REMOTE_PATH/.env &&
                             echo "DB_USER=${DB_USER}" >> $REMOTE_PATH/.env &&
-                            echo "SECRET_KEY=${SECRET_KEY}" >> $REMOTE_PATH/.env &&
+                            echo "SECRET_KEY=${SECRET_KEY}" >> $REMOTE_PATH/.env
                         fi
 
                         echo "🔁 Pull y deploy..."
