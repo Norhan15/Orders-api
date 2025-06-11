@@ -28,7 +28,7 @@ pipeline {
                 script {
                     def branch = env.BRANCH_NAME ?: 'main'
                     echo "🔍 Rama activa: ${branch}"
-                    def ACTUAL_BRANCH = branch ?: 'main'
+                    env.ACTUAL_BRANCH = branch ?: 'main'
                 }
             }
         }
