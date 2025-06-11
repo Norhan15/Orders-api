@@ -26,10 +26,9 @@ pipeline {
         stage('Detect Branch') {
             steps {
                 script {
-                    env.ACTUAL_BRANCH = env.BRANCH_NAME
-                    echo "🔍 Rama activa: ${env.ACTUAL_BRANCH}"
-                    env.ACTUAL_BRANCH = env.BRANCH_NAME ?: 'main'
-                    echo "🔍 Rama activa: ${env.ACTUAL_BRANCH}"
+                    def branch = env.BRANCH_NAME ?: 'main'
+                    echo "🔍 Rama activa: ${branch}"
+                    ACTUAL_BRANCH = branch ?: 'main'
                 }
             }
         }
