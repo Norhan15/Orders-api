@@ -67,7 +67,7 @@ const subtractStockBulk = async (req, res) => {
   try {
     const products = req.body;
 
-    const response = await axios.post('http://52.45.170.88:3000/products/stock/subtract-bulk', products);
+    const response = await axios.post('http://44.205.201.108:3000/products/stock/subtract-bulk', products);
 
     res.status(200).json({
       message: 'Stock actualizado correctamente',
