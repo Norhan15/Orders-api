@@ -1,4 +1,7 @@
 const orderService = require('../services/orderService');
+const db = require('../config/db');
+const axios = require('axios');
+
 
 const createOrder = async (req, res) => {
   const { user_id, total } = req.body;
@@ -21,29 +24,12 @@ const addOrderItem = async (req, res) => {
 };
 
 const processPayment = async (req, res) => {
+  const { order_id, amount, payment_method, transaction_id } = req.body;
   try {
-    const { order_id, amount, payment_method, transaction_id } = req.body;
-
-    // 1. Guardar la orden con estado 'pendiente' (ya lo haces)
-    await savePendingOrder(order_id, amount, payment_method, transaction_id);
-
-    // 2. Llamar al servicio de pagos
-    const paymentResponse = await axios.post('http://localhost:3000/payment', {
-      order_id,
-      amount,
-      payment_method,
-      transaction_id
-    });
-
-    // 3. Devolver respuesta al cliente
-    res.status(200).json({
-      message: 'Orden pendiente y pago enviado',
-      payment_id: paymentResponse.data.payment_id
-    });
-
+    const [result] = await orderService.processPayment(order_id, amount, payment_method, transaction_id);
+    res.json(result[0]);
   } catch (error) {
-    console.error('Error al procesar pago desde orders:', error);
-    res.status(500).json({ error: 'Error en el procesamiento de la orden' });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -66,31 +52,33 @@ const getOrderDetail = async (req, res) => {
   }
 };
 
-async function updateOrderStatus(req, res) {
+
+const updateOrderStatus = async (req, res) => {
+  const { order_id, status } = req.body;
   try {
-    const { order_id, new_status } = req.body;
-
-    // 1. Actualizar el estado de la orden en la base de datos
-    await db.query('UPDATE orders SET status = ? WHERE id = ?', [new_status, order_id]);
-
-    // 2. Si el nuevo estado es 'completado', entonces restar stock
-    if (new_status === 'completado') {
-      // 3. Obtener productos y cantidades de la orden
-      const [products] = await db.query(
-        `SELECT product_id as id, quantity FROM order_products WHERE order_id = ?`,
-        [order_id]
-      );
-
-      // 4. Llamar a /products/stock/subtract-bulk para restar el stock
-      await axios.post('http://44.205.201.108:3000/products/stock/subtract-bulk', products);
-    }
-
-    res.status(200).json({ message: 'Estado actualizado correctamente' });
+    const [result] = await orderService.updateOrderStatus(order_id, status);
+    res.json(result[0]);
   } catch (error) {
-    console.error('Error al actualizar estado:', error);
-    res.status(500).json({ error: 'Error al actualizar estado de la orden' });
+    res.status(500).json({ error: error.message });
   }
-}
+};
+
+const subtractStockBulk = async (req, res) => {
+  try {
+    const products = req.body;
+
+    const response = await axios.post('http://52.45.170.88:3000/products/stock/subtract-bulk', products);
+
+    res.status(200).json({
+      message: 'Stock actualizado correctamente',
+      result: response.data
+    });
+  } catch (error) {
+    console.error('Error al restar stock en bulk:', error.message);
+    res.status(500).json({ error: 'Error al restar stock de productos' });
+  }
+};
+
 
 const cancelOrder = async (req, res) => {
   try {
@@ -108,5 +96,6 @@ module.exports = {
   getUserOrders,
   getOrderDetail,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  subtractStockBulk
 };
